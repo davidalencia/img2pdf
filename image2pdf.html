@@ -1,0 +1,74 @@
+<html>
+<head>
+	<title>image2pdf</title>
+	<script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.min.js"></script>
+</head>
+<body>
+<input type='file' id="imgInp" multiple onchange="selected()"/>
+</body>
+<script type="text/javascript">
+const doc = new jsPDF();
+function resizeImg (img, width) {
+	ratio = width/img.width
+	img.width = Math.floor(img.width*ratio)
+	img.height = Math.floor(img.height*ratio)
+}
+function createImg(file) {
+	var element = document.createElement('img')
+	element.crossOrigin = " ";
+
+	return new Promise((res, rej)=>{
+		var reader = new FileReader();    
+    	reader.onload = (e)=> {
+    		element.src = e.target.result;
+    		res(element);
+    	}
+    	reader.readAsDataURL(file); // convert to base64 string
+	})
+}
+
+function getExif(img) {
+	return new Promise((res, rej)=>{
+		EXIF.getData(img, function() {
+	        var allMetaData = EXIF.getAllTags(this);
+	        return res(allMetaData)
+	    });
+	})
+    
+}
+
+async function selected(){
+	const file = document.getElementById('imgInp')
+
+	if(!file.files)
+		return;
+	for(i=0; i<file.files.length; i++){
+		if(i>1 && i%2==0)
+			doc.addPage()
+		let altura = 10
+		if(i%2)
+			altura+=145
+		let photo = await createImg(file.files[i])
+		resizeImg(photo, 190)
+		data = await getExif(photo)
+		data = {
+			F:data.ApertureValue,
+			T:data.ExposureTime, 
+			ISO:data.ISOSpeedRatings
+		}
+		doc.addImage(photo, 'JPEG', 10, altura+5, photo.width, photo.height, 'photo'+i);
+		doc.text(JSON.stringify(data), 10, altura);
+	}
+	doc.save('imagenes');
+}
+
+
+
+
+
+
+//doc.save('datauri');
+
+</script>
+</html>
