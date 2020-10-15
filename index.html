@@ -5,9 +5,11 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.min.js"></script>
 </head>
 <body>
-<input type='file' id="imgInp" multiple onchange="selected()"/>
+<input type='file' id="imgInp" multiple onchange="selected()"/></br>
+<a id="percent"></a>
 </body>
 <script type="text/javascript">
+
 const doc = new jsPDF();
 function resizeImg (img, width) {
 	ratio = width/img.width
@@ -40,10 +42,13 @@ function getExif(img) {
 
 async function selected(){
 	const file = document.getElementById('imgInp')
+	let percent = document.getElementById("percent")
 
+	let per = 0
 	if(!file.files)
 		return;
 	for(i=0; i<file.files.length; i++){
+		percent.innerHTML = `${per}%`
 		if(i>1 && i%2==0)
 			doc.addPage()
 		let altura = 10
@@ -59,7 +64,9 @@ async function selected(){
 		}
 		doc.addImage(photo, 'JPEG', 10, altura+5, photo.width, photo.height, 'photo'+i);
 		doc.text(JSON.stringify(data), 10, altura);
+		per = (i+1)/file.files.length*100;
 	}
+	percent.innerHTML = `${per}%`
 	doc.save('imagenes');
 }
 
